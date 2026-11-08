@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Four Corners | لوحة تحكم المدير</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101010;color:#eee;font-family:Arial,sans-serif}
+header{background:#171717;padding:22px 5%;border-bottom:1px solid #b89445}
+.brand{color:#d7b45b;font-size:25px;font-weight:bold}
+header small{display:block;color:#aaa;margin-top:7px}
+.container{max-width:1100px;margin:35px auto;padding:0 18px}
+.panel{background:#1c1c1c;border:1px solid #39332a;border-radius:13px;padding:25px;margin-bottom:20px}
+h2{color:#d7b45b;margin-top:0}
+input{width:100%;padding:14px;margin:8px 0 15px;border-radius:7px;border:1px solid #555;background:#292929;color:white}
+button{padding:13px 20px;background:#b89445;color:#111;border:0;border-radius:7px;font-weight:bold;cursor:pointer}
+button:hover{opacity:.85}
+.hidden{display:none!important}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px}
+.stat{background:#242424;border:1px solid #49402d;border-radius:12px;padding:20px}
+.stat span{color:#bbb;font-size:14px}
+.stat strong{display:block;font-size:30px;color:#d7b45b;margin-top:13px}
+#message{color:#f0c46b;margin-top:12px}
+#logout{float:left}
+footer{text-align:center;color:#777;padding:30px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">FOUR CORNERS</div>
+  <small>لوحة تحكم الإدارة الرئيسية</small>
+</header>
+
+<div class="container">
+
+  <section id="loginPanel" class="panel">
+    <h2>تسجيل دخول المدير</h2>
+    <form id="loginForm">
+      <label>البريد الإلكتروني</label>
+      <input id="email" type="email" required placeholder="البريد الإلكتروني للمدير">
+      <label>كلمة المرور</label>
+      <input id="password" type="password" required placeholder="كلمة المرور">
+      <button type="submit">تسجيل الدخول</button>
+    </form>
+    <div id="message"></div>
+  </section>
+
+  <section id="dashboard" class="hidden">
+    <div class="panel">
+      <button id="logout">تسجيل الخروج</button>
+      <h2>مرحباً بك في لوحة المدير</h2>
+      <p id="welcome">Four Corners CRM</p>
+      <p id="status">جاري تحميل البيانات...</p>
+    </div>
+
+    <h2>الإحصائيات الرئيسية</h2>
+    <div class="grid">
+      <div class="stat"><span>إجمالي العملاء</span><strong id="customers">—</strong></div>
+      <div class="stat"><span>إجمالي الطلبات</span><strong id="orders">—</strong></div>
+      <div class="stat"><span>العقود</span><strong id="contracts">—</strong></div>
+      <div class="stat"><span>الموظفون</span><strong id="employees">—</strong></div>
+      <div class="stat"><span>مهام التشغيل</span><strong id="tasks">—</strong></div>
+      <div class="stat"><span>المتابعات</span><strong id="followups">—</strong></div>
+      <div class="stat"><span>طلبات ما بعد البيع</span><strong id="aftersales">—</strong></div>
+      <div class="stat"><span>إجمالي التحصيلات</span><strong id="payments">—</strong></div>
+    </div>
+    <div class="panel" style="margin-top:20px">
+      <h2>حالة النظام</h2>
+      <p id="systemMessage">لوحة الإدارة متصلة بقاعدة البيانات.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>FOUR CORNERS UPVC © 2026</footer>
+
+<script>
+const SUPABASE_URL = "https://cilfktroyeocuorohorz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_0S-yQSnNfZfDQOpPkt564Q_M-Pmm6D4";
+
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+const loginPanel = document.getElementById("loginPanel");
+const dashboard = document.getElementById("dashboard");
+const message = document.getElementById("message");
+
+function showLogin(text = "") {
+  loginPanel.classList.remove("hidden");
+  dashboard.classList.add("hidden");
+  message.textContent = text;
+}
+
+async function checkAdmin() {
+  const { data: { user }, error } = await db.auth.getUser();
+
+  if (error || !user) {
+    showLogin();
+    return;
+  }
+
+  const { data: profile, error: profileError } = await db
+    .from("profiles")
+    .select("full_name, role, is_active")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile ||
+      profile.role !== "admin" || !profile.is_active) {
+    await db.auth.signOut();
+    showLogin("هذا الحساب لا يملك صلاحية المدير.");
+    return;
+  }
+
+  loginPanel.classList.add("hidden");
+  dashboard.classList.remove("hidden");
+  document.getElementById("welcome").textContent =
+    "أهلاً " + profile.full_name;
+
+  await loadDashboard();
+}
+
+document.getElementById("loginForm").addEventListener("submit",
+async function(e) {
+  e.preventDefault();
+  message.textContent = "جاري تسجيل الدخول...";
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  const { error } = await db.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    showLogin("تعذر تسجيل الدخول: " + error.message);
+    return;
+  }
+
+  await checkAdmin();
+});
+
+async function getCount(table) {
+  const { count, error } = await db
+    .from(table)
+    .select("*", { count: "exact", head: true });
+
+  if (error) throw error;
+  return count ?? 0;
+}
+
+async function loadDashboard() {
+  const status = document.getElementById("status");
+  status.textContent = "جاري قراءة بيانات الشركة...";
+
+  try {
+    const tables = [
+      ["customers", "customers"],
+      ["orders", "orders"],
+      ["contracts", "contracts"],
+      ["profiles", "employees"],
+      ["work_tasks", "tasks"],
+      ["follow_ups", "followups"],
+      ["after_sales", "aftersales"]
+    ];
+
+    const results = await Promise.all(
+      tables.map(async ([table, id]) => {
+        const count = await getCount(table);
+        return [id, count];
+      })
+    );
+
+    results.forEach(([id, value]) => {
+      document.getElementById(id).textContent =
+        value.toLocaleString("en-US");
+    });
+
+    const { data: payments, error } = await db
+      .from("payments")
+      .select("amount");
+
+    if (error) throw error;
+
+    const total = (payments || []).reduce(
+      (sum, row) => sum + Number(row.amount || 0), 0
+    );
+
+    document.getElementById("payments").textContent =
+      total.toLocaleString("en-US") + " ج";
+
+    status.textContent = "تم تحميل البيانات بنجاح";
+  } catch (error) {
+    status.textContent = "تعذر تحميل بعض البيانات: " + error.message;
+  }
+}
+
+document.getElementById("logout").addEventListener("click",
+async function() {
+  await db.auth.signOut();
+  showLogin("تم تسجيل الخروج.");
+});
+
+db.auth.onAuthStateChange((event, session) => {
+  if (event === "SIGNED_OUT") showLogin();
+});
+
+checkAdmin();
+</script>
+</body>
+</html>
