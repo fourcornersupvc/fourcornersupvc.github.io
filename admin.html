@@ -3,223 +3,331 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Four Corners | لوحة تحكم المدير</title>
+<title>Four Corners CRM</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#101010;color:#eee;font-family:Arial,sans-serif}
-header{background:#171717;padding:22px 5%;border-bottom:1px solid #b89445}
-.brand{color:#d7b45b;font-size:25px;font-weight:bold}
-header small{display:block;color:#aaa;margin-top:7px}
-.container{max-width:1100px;margin:35px auto;padding:0 18px}
-.panel{background:#1c1c1c;border:1px solid #39332a;border-radius:13px;padding:25px;margin-bottom:20px}
-h2{color:#d7b45b;margin-top:0}
-input{width:100%;padding:14px;margin:8px 0 15px;border-radius:7px;border:1px solid #555;background:#292929;color:white}
-button{padding:13px 20px;background:#b89445;color:#111;border:0;border-radius:7px;font-weight:bold;cursor:pointer}
-button:hover{opacity:.85}
+body{margin:0;font-family:Tahoma,Arial;background:#f3f4f6;color:#222}
+header{background:#171717;color:#d8b45a;padding:18px 22px;display:flex;justify-content:space-between;align-items:center}
+header h2{margin:0;font-size:20px}
+button{border:0;border-radius:7px;padding:10px 16px;cursor:pointer;font-weight:bold}
+.logout{background:#d8b45a;color:#171717}
+#loginPanel{max-width:400px;margin:70px auto;background:white;padding:25px;border-radius:12px;box-shadow:0 3px 15px #ddd}
+input,select,textarea{width:100%;padding:12px;margin:7px 0 14px;border:1px solid #ddd;border-radius:7px;font-size:15px}
+.primary{background:#171717;color:#d8b45a}
+#app{display:none}
+.layout{display:flex;min-height:calc(100vh - 65px)}
+nav{width:220px;background:#222;color:white;padding:15px}
+nav button{display:block;width:100%;text-align:right;margin:5px 0;background:transparent;color:white;padding:13px}
+nav button:hover,nav button.active{background:#444;color:#e2bd63}
+main{flex:1;padding:22px;min-width:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.card,.panel{background:white;padding:18px;border-radius:10px;box-shadow:0 2px 8px #ddd;margin-bottom:15px}
+.card strong{display:block;font-size:25px;color:#a47b20;margin-top:10px}
+h3{margin-top:0}
+table{width:100%;border-collapse:collapse;background:white;min-width:600px}
+th,td{padding:11px;border-bottom:1px solid #eee;text-align:right}
+th{background:#222;color:#e2bd63}
+.table-wrap{overflow-x:auto}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+#message{color:#b33;margin:10px 0}
 .hidden{display:none!important}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px}
-.stat{background:#242424;border:1px solid #49402d;border-radius:12px;padding:20px}
-.stat span{color:#bbb;font-size:14px}
-.stat strong{display:block;font-size:30px;color:#d7b45b;margin-top:13px}
-#message{color:#f0c46b;margin-top:12px}
-#logout{float:left}
-footer{text-align:center;color:#777;padding:30px}
+@media(max-width:700px){
+.layout{display:block}
+nav{width:100%;display:grid;grid-template-columns:repeat(2,1fr)}
+nav button{font-size:13px}
+main{padding:12px}
+}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="brand">FOUR CORNERS</div>
-  <small>لوحة تحكم الإدارة الرئيسية</small>
+<h2>FOUR CORNERS | CRM</h2>
+<button class="logout" id="logoutBtn" style="display:none">تسجيل الخروج</button>
 </header>
 
-<div class="container">
+<section id="loginPanel">
+<h2>تسجيل دخول المدير</h2>
+<label>البريد الإلكتروني</label>
+<input id="email" type="email" placeholder="Email">
+<label>كلمة المرور</label>
+<input id="password" type="password" placeholder="Password">
+<button class="primary" id="loginBtn" style="width:100%">دخول</button>
+<div id="message"></div>
+</section>
 
-  <section id="loginPanel" class="panel">
-    <h2>تسجيل دخول المدير</h2>
-    <form id="loginForm">
-      <label>البريد الإلكتروني</label>
-      <input id="email" type="email" required placeholder="البريد الإلكتروني للمدير">
-      <label>كلمة المرور</label>
-      <input id="password" type="password" required placeholder="كلمة المرور">
-      <button type="submit">تسجيل الدخول</button>
-    </form>
-    <div id="message"></div>
-  </section>
+<div id="app">
+<div class="layout">
+<nav>
+<button class="active" data-page="home">الرئيسية</button>
+<button data-page="customers">العملاء</button>
+<button data-page="orders">الطلبات</button>
+<button data-page="contracts">العقود</button>
+<button data-page="payments">المدفوعات</button>
+<button data-page="follow_ups">المتابعات</button>
+<button data-page="work_tasks">التصنيع والتركيب</button>
+<button data-page="after_sales">خدمة ما بعد البيع</button>
+<button data-page="profiles">الموظفون</button>
+<button data-page="offers">العروض</button>
+<button data-page="financial_transactions">الحسابات</button>
+<button data-page="sections">قطاعات UPVC</button>
+</nav>
 
-  <section id="dashboard" class="hidden">
-    <div class="panel">
-      <button id="logout">تسجيل الخروج</button>
-      <h2>مرحباً بك في لوحة المدير</h2>
-      <p id="welcome">Four Corners CRM</p>
-      <p id="status">جاري تحميل البيانات...</p>
-    </div>
+<main>
+<div id="welcome"></div>
 
-    <h2>الإحصائيات الرئيسية</h2>
-    <div class="grid">
-      <div class="stat"><span>إجمالي العملاء</span><strong id="customers">—</strong></div>
-      <div class="stat"><span>إجمالي الطلبات</span><strong id="orders">—</strong></div>
-      <div class="stat"><span>العقود</span><strong id="contracts">—</strong></div>
-      <div class="stat"><span>الموظفون</span><strong id="employees">—</strong></div>
-      <div class="stat"><span>مهام التشغيل</span><strong id="tasks">—</strong></div>
-      <div class="stat"><span>المتابعات</span><strong id="followups">—</strong></div>
-      <div class="stat"><span>طلبات ما بعد البيع</span><strong id="aftersales">—</strong></div>
-      <div class="stat"><span>إجمالي التحصيلات</span><strong id="payments">—</strong></div>
-    </div>
-    <div class="panel" style="margin-top:20px">
-      <h2>حالة النظام</h2>
-      <p id="systemMessage">لوحة الإدارة متصلة بقاعدة البيانات.</p>
-    </div>
-  </section>
-
+<section id="homePage">
+<h3>لوحة المؤشرات</h3>
+<div class="cards" id="stats"></div>
+<div class="panel">
+<h3>مرحبًا بك في نظام Four Corners</h3>
+<p>من هنا تقدر تتابع العملاء والطلبات والعقود وحركة العمل.</p>
 </div>
+</section>
 
-<footer>FOUR CORNERS UPVC © 2026</footer>
+<section id="dataPage" class="hidden">
+<div class="panel">
+<h3 id="pageTitle"></h3>
+<div id="customerForm" class="hidden">
+<h3>إضافة عميل جديد</h3>
+<div class="form-grid">
+<div><label>اسم العميل *</label><input id="full_name" placeholder="اسم العميل"></div>
+<div><label>رقم الهاتف *</label><input id="phone" placeholder="رقم الهاتف"></div>
+<div><label>واتساب</label><input id="whatsapp" placeholder="رقم واتساب"></div>
+<div><label>المنطقة</label><input id="area" placeholder="مثال: أكتوبر"></div>
+<div><label>العنوان</label><input id="address" placeholder="عنوان العميل"></div>
+<div><label>مصدر العميل</label><select id="source"><option value="">اختر</option><option>Facebook</option><option>WhatsApp</option><option>Website</option><option>ترشيح</option><option>زيارة</option></select></div>
+</div>
+<label>ملاحظات</label>
+<textarea id="notes" rows="2" placeholder="ملاحظات عن العميل"></textarea>
+<button class="primary" id="saveCustomer">حفظ العميل</button>
+<div id="customerMessage"></div>
+<hr>
+</div>
+<div id="pageTools"></div>
+<div class="table-wrap" id="tableArea"></div>
+</div>
+</section>
+</main>
+</div>
+</div>
 
 <script>
 const SUPABASE_URL = "https://cilfktroyeocuorohorz.supabase.co";
 const SUPABASE_KEY = "sb_publishable_0S-yQSnNfZfDQOpPkt564Q_M-Pmm6D4";
 
-const db = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+const db = window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const loginPanel = document.getElementById("loginPanel");
-const dashboard = document.getElementById("dashboard");
-const message = document.getElementById("message");
+const loginPanel=document.getElementById("loginPanel");
+const app=document.getElementById("app");
+const message=document.getElementById("message");
+let currentPage="home";
 
-function showLogin(text = "") {
-  loginPanel.classList.remove("hidden");
-  dashboard.classList.add("hidden");
-  message.textContent = text;
+const pages={
+customers:"العملاء",
+orders:"الطلبات",
+contracts:"العقود",
+payments:"المدفوعات",
+follow_ups:"المتابعات",
+work_tasks:"التصنيع والتركيب",
+after_sales:"خدمة ما بعد البيع",
+profiles:"الموظفون",
+offers:"العروض",
+financial_transactions:"الحسابات",
+sections:"قطاعات UPVC"
+};
+
+function showLogin(msg=""){
+ loginPanel.style.display="block";
+ app.style.display="none";
+ message.textContent=msg;
 }
 
-async function checkAdmin() {
-  const { data: { user }, error } = await db.auth.getUser();
+async function checkAdmin(){
+ const {data:{user},error}=await db.auth.getUser();
+ if(error||!user){showLogin();return;}
 
-  if (error || !user) {
-    showLogin();
-    return;
-  }
+ const {data:profile,error:profileError}=await db
+  .from("profiles")
+  .select("full_name,role,is_active")
+  .eq("id",user.id)
+  .single();
 
-  const { data: profile, error: profileError } = await db
-    .from("profiles")
-    .select("full_name, role, is_active")
-    .eq("id", user.id)
-    .single();
-if (profileError) {
-  showLogin("خطأ قراءة بيانات المدير: " + profileError.message);
+ if(profileError){
+  showLogin("خطأ قراءة بيانات المدير: "+profileError.message);
   return;
-}
+ }
 
-if (!profile) {
-  showLogin("لم يتم العثور على بيانات المدير في profiles.");
+ if(!profile||profile.role!=="admin"||profile.is_active!==true){
+  showLogin("الحساب ليس لديه صلاحية مدير.");
   return;
+ }
+
+ loginPanel.style.display="none";
+ app.style.display="block";
+ document.getElementById("logoutBtn").style.display="block";
+ document.getElementById("welcome").innerHTML="<h3>أهلاً "+escapeHTML(profile.full_name)+" 👋</h3>";
+ await loadStats();
 }
 
-if (profile.role !== "admin" || profile.is_active !== true) {
-  showLogin(
-    "الصلاحيات غير مطابقة: role = " +
-    profile.role + " | is_active = " + profile.is_active
-  );
-  return;
+document.getElementById("loginBtn").onclick=async()=>{
+ message.textContent="جاري تسجيل الدخول...";
+ const {error}=await db.auth.signInWithPassword({
+  email:document.getElementById("email").value.trim(),
+  password:document.getElementById("password").value
+ });
+ if(error){message.textContent=error.message;return;}
+ await checkAdmin();
+};
+
+document.getElementById("logoutBtn").onclick=async()=>{
+ await db.auth.signOut();
+ location.reload();
+};
+
+function escapeHTML(value){
+ return String(value??"").replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
 }
 
-  loginPanel.classList.add("hidden");
-  dashboard.classList.remove("hidden");
-  document.getElementById("welcome").textContent =
-    "أهلاً " + profile.full_name;
-
-  await loadDashboard();
+async function countRows(table){
+ const {count,error}=await db.from(table).select("*",{count:"exact",head:true});
+ if(error) return "—";
+ return count??0;
 }
 
-document.getElementById("loginForm").addEventListener("submit",
-async function(e) {
-  e.preventDefault();
-  message.textContent = "جاري تسجيل الدخول...";
+async function loadStats(){
+ const tables=[
+ ["العملاء","customers"],
+ ["الطلبات","orders"],
+ ["العقود","contracts"],
+ ["الموظفون","profiles"],
+ ["المتابعات","follow_ups"],
+ ["خدمة ما بعد البيع","after_sales"]
+ ];
+ const stats=document.getElementById("stats");
+ stats.innerHTML="";
+ for(const [label,table] of tables){
+  const count=await countRows(table);
+  stats.innerHTML+=`<div class="card">${label}<strong>${count}</strong></div>`;
+ }
+}
 
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  const { error } = await db.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) {
-    showLogin("تعذر تسجيل الدخول: " + error.message);
-    return;
-  }
-
-  await checkAdmin();
+document.querySelectorAll("nav button").forEach(button=>{
+ button.onclick=()=>openPage(button.dataset.page,button);
 });
 
-async function getCount(table) {
-  const { count, error } = await db
-    .from(table)
-    .select("*", { count: "exact", head: true });
+async function openPage(page,button){
+ currentPage=page;
+ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+ if(button)button.classList.add("active");
 
-  if (error) throw error;
-  return count ?? 0;
+ document.getElementById("homePage").classList.toggle("hidden",page!=="home");
+ document.getElementById("dataPage").classList.toggle("hidden",page==="home");
+ if(page==="home"){await loadStats();return;}
+
+ document.getElementById("pageTitle").textContent=pages[page];
+ const isCustomers=page==="customers";
+ document.getElementById("customerForm").classList.toggle("hidden",!isCustomers);
+ document.getElementById("pageTools").innerHTML=isCustomers
+  ?'<input id="searchCustomer" placeholder="ابحث باسم العميل أو رقم الهاتف..." oninput="filterCustomers()">'
+  :'';
+ await loadTable(page);
 }
 
-async function loadDashboard() {
-  const status = document.getElementById("status");
-  status.textContent = "جاري قراءة بيانات الشركة...";
+let customerRows=[];
 
-  try {
-    const tables = [
-      ["customers", "customers"],
-      ["orders", "orders"],
-      ["contracts", "contracts"],
-      ["profiles", "employees"],
-      ["work_tasks", "tasks"],
-      ["follow_ups", "followups"],
-      ["after_sales", "aftersales"]
-    ];
+async function loadTable(table){
+ const area=document.getElementById("tableArea");
+ area.innerHTML="جاري تحميل البيانات...";
+ const {data,error}=await db.from(table).select("*").limit(100);
 
-    const results = await Promise.all(
-      tables.map(async ([table, id]) => {
-        const count = await getCount(table);
-        return [id, count];
-      })
-    );
-
-    results.forEach(([id, value]) => {
-      document.getElementById(id).textContent =
-        value.toLocaleString("en-US");
-    });
-
-    const { data: payments, error } = await db
-      .from("payments")
-      .select("amount");
-
-    if (error) throw error;
-
-    const total = (payments || []).reduce(
-      (sum, row) => sum + Number(row.amount || 0), 0
-    );
-
-    document.getElementById("payments").textContent =
-      total.toLocaleString("en-US") + " ج";
-
-    status.textContent = "تم تحميل البيانات بنجاح";
-  } catch (error) {
-    status.textContent = "تعذر تحميل بعض البيانات: " + error.message;
-  }
+ if(error){
+  area.innerHTML="<p>خطأ تحميل البيانات: "+escapeHTML(error.message)+"</p>";
+  return;
+ }
+ if(table==="customers")customerRows=data||[];
+ renderTable(table,data||[]);
 }
 
-document.getElementById("logout").addEventListener("click",
-async function() {
-  await db.auth.signOut();
-  showLogin("تم تسجيل الخروج.");
-});
+function renderTable(table,rows){
+ const area=document.getElementById("tableArea");
+ if(!rows.length){
+  area.innerHTML="<p>لا توجد بيانات مسجلة حتى الآن.</p>";
+  return;
+ }
+ let columns=table==="customers"
+  ?["full_name","phone","whatsapp","area","address","source","status"]
+  :Object.keys(rows[0]).slice(0,7);
 
-db.auth.onAuthStateChange((event, session) => {
-  if (event === "SIGNED_OUT") showLogin();
-});
+ const labels={
+ full_name:"اسم العميل",phone:"الهاتف",whatsapp:"واتساب",
+ area:"المنطقة",address:"العنوان",source:"المصدر",status:"الحالة",
+ order_code:"رقم الطلب",contract_number:"رقم العقد",
+ amount:"المبلغ",role:"الصلاحية",title:"العنوان",
+ task_type:"نوع المهمة",request_type:"نوع الطلب"
+ };
+
+ let html="<table><thead><tr>";
+ columns.forEach(c=>html+="<th>"+escapeHTML(labels[c]||c)+"</th>");
+ html+="</tr></thead><tbody>";
+ rows.forEach(row=>{
+  html+="<tr>";
+  columns.forEach(c=>html+="<td>"+escapeHTML(row[c])+"</td>");
+  html+="</tr>";
+ });
+ html+="</tbody></table>";
+ area.innerHTML=html;
+}
+
+window.filterCustomers=function(){
+ const q=(document.getElementById("searchCustomer")?.value||"").toLowerCase();
+ const filtered=customerRows.filter(row=>
+  String(row.full_name||"").toLowerCase().includes(q)||
+  String(row.phone||"").toLowerCase().includes(q)
+ );
+ renderTable("customers",filtered);
+};
+
+document.getElementById("saveCustomer").onclick=async()=>{
+ const msg=document.getElementById("customerMessage");
+ const full_name=document.getElementById("full_name").value.trim();
+ const phone=document.getElementById("phone").value.trim();
+
+ if(!full_name||!phone){
+  msg.textContent="من فضلك اكتب اسم العميل ورقم الهاتف.";
+  return;
+ }
+
+ const payload={
+  full_name,
+  phone,
+  whatsapp:document.getElementById("whatsapp").value.trim()||null,
+  area:document.getElementById("area").value.trim()||null,
+  address:document.getElementById("address").value.trim()||null,
+  source:document.getElementById("source").value||null,
+  notes:document.getElementById("notes").value.trim()||null,
+  status:"new"
+ };
+
+ msg.textContent="جاري الحفظ...";
+ const {error}=await db.from("customers").insert(payload);
+
+ if(error){
+  msg.textContent="تعذر الحفظ: "+error.message;
+  return;
+ }
+
+ msg.textContent="تم حفظ العميل بنجاح ✅";
+ ["full_name","phone","whatsapp","area","address","notes"].forEach(id=>{
+  document.getElementById(id).value="";
+ });
+ document.getElementById("source").value="";
+ await loadTable("customers");
+ await loadStats();
+};
 
 checkAdmin();
 </script>
