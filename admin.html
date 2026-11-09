@@ -109,13 +109,23 @@ async function checkAdmin() {
     .select("full_name, role, is_active")
     .eq("id", user.id)
     .single();
+if (profileError) {
+  showLogin("خطأ قراءة بيانات المدير: " + profileError.message);
+  return;
+}
 
-  if (profileError || !profile ||
-      profile.role !== "admin" || !profile.is_active) {
-    await db.auth.signOut();
-    showLogin("هذا الحساب لا يملك صلاحية المدير.");
-    return;
-  }
+if (!profile) {
+  showLogin("لم يتم العثور على بيانات المدير في profiles.");
+  return;
+}
+
+if (profile.role !== "admin" || profile.is_active !== true) {
+  showLogin(
+    "الصلاحيات غير مطابقة: role = " +
+    profile.role + " | is_active = " + profile.is_active
+  );
+  return;
+}
 
   loginPanel.classList.add("hidden");
   dashboard.classList.remove("hidden");
