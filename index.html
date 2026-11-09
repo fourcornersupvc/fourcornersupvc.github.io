@@ -371,5 +371,23 @@ $("f").onsubmit=e=>{e.preventDefault();
  alert("تم فتح واتساب. اضغط «إرسال» داخل واتساب حتى يصل طلبك إلينا.");
 };
 </script>
+
+<!-- عداد الزيارات -->
+<div id="visit-counter" style="text-align:center;padding:18px 10px;direction:ltr"></div>
+<script>
+(function(){
+  var box=document.getElementById("visit-counter");
+  var footer=document.querySelector("footer");
+  if(footer){footer.appendChild(box)}
+  var a=document.createElement("a");
+  a.href="https://hits.sh/fourcornersupvc.github.io/";
+  a.target="_blank";a.rel="noopener";
+  var img=document.createElement("img");
+  img.alt="عدد الزيارات";
+  img.loading="lazy";
+  img.src="https://hits.sh/fourcornersupvc.github.io.svg?style=flat-square&label=Visits&color=1e2327&labelColor=555";
+  a.appendChild(img);box.appendChild(a);
+})();
+</script>
 </body>
 </html>
