@@ -77,7 +77,40 @@ main{padding:12px}
 
 <main>
 <div id="welcome"></div>
+<section id="employeeAccountsPage" class="hidden">
+  <div class="panel">
+    <h3>إنشاء حساب موظف جديد</h3>
 
+    <label>اسم الموظف</label>
+    <input id="empName" placeholder="الاسم بالكامل">
+
+    <label>البريد الإلكتروني</label>
+    <input id="empEmail" type="email" placeholder="البريد الإلكتروني">
+
+    <label>رقم الهاتف</label>
+    <input id="empPhone" placeholder="رقم الهاتف">
+
+    <label>كلمة المرور</label>
+    <div style="display:flex;gap:8px">
+      <input id="empPassword" type="password"
+        placeholder="8 أحرف على الأقل" style="flex:1">
+      <button type="button"
+        onclick="togglePassword('empPassword',this)">👁️</button>
+    </div>
+
+    <label>صلاحية الموظف</label>
+    <select id="empRole">
+      <option value="distributor">مسؤول توزيع العملاء</option>
+      <option value="sales">موظف مبيعات</option>
+    </select>
+
+    <button class="primary" id="createEmployeeBtn">
+      إنشاء الحساب
+    </button>
+
+    <div id="employeeMessage"></div>
+  </div>
+</section>
 <section id="homePage">
 <h3>لوحة المؤشرات</h3>
 <div class="cards" id="stats"></div>
@@ -125,7 +158,7 @@ const app=document.getElementById("app");
 const message=document.getElementById("message");
 let currentPage="home";
 
-const pages={
+const pages=employee_accounts:"إضافة حساب موظف",{
 customers:"العملاء",
 orders:"الطلبات",
 contracts:"العقود",
@@ -221,6 +254,35 @@ document.querySelectorAll("nav button").forEach(button=>{
 });
 
 async function openPage(page,button){
+ currentPage=page;
+
+ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+ if(button) button.classList.add("active");
+
+ const isHome=page==="home";
+ const isEmployees=page==="employee_accounts";
+
+ document.getElementById("homePage").classList.toggle("hidden",!isHome);
+ document.getElementById("dataPage").classList.toggle("hidden",isHome||isEmployees);
+ document.getElementById("employeeAccountsPage").classList.toggle("hidden",!isEmployees);
+
+ if(isHome){
+   await loadStats();
+   return;
+ }
+
+ if(isEmployees) return;
+
+ document.getElementById("pageTitle").textContent=pages[page];
+ const isCustomers=page==="customers";
+ document.getElementById("customerForm").classList.toggle("hidden",!isCustomers);
+
+ document.getElementById("pageTools").innerHTML=isCustomers
+  ? '<input id="searchCustomer" placeholder="ابحث باسم العميل أو رقم الهاتف..." oninput="filterCustomers()">'
+  : '';
+
+ await loadTable(page);
+}
  currentPage=page;
  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
  if(button)button.classList.add("active");
@@ -329,7 +391,51 @@ document.getElementById("saveCustomer").onclick=async()=>{
  await loadTable("customers");
  await loadStats();
 };
+document.getElementById("createEmployeeBtn").onclick=async()=>{
+ const msg=document.getElementById("employeeMessage");
+ const btn=document.getElementById("createEmployeeBtn");
 
+ const full_name=document.getElementById("empName").value.trim();
+ const email=document.getElementById("empEmail").value.trim();
+ const phone=document.getElementById("empPhone").value.trim();
+ const password=document.getElementById("empPassword").value;
+ const role=document.getElementById("empRole").value;
+
+ if(!full_name||!email||!password){
+   msg.textContent="اكتب الاسم والبريد وكلمة المرور.";
+   return;
+ }
+
+ if(password.length<8){
+   msg.textContent="كلمة المرور يجب أن تكون 8 أحرف على الأقل.";
+   return;
+ }
+
+ btn.disabled=true;
+ msg.textContent="جاري إنشاء الحساب...";
+
+ const {data,error}=await db.functions.invoke("create-employee",{
+   body:{full_name,email,phone,password,role}
+ });
+
+ btn.disabled=false;
+
+ if(error){
+   msg.textContent="خطأ: "+error.message;
+   return;
+ }
+
+ if(!data?.success){
+   msg.textContent="تعذر إنشاء الحساب: "+(data?.error||"خطأ غير معروف");
+   return;
+ }
+
+ msg.textContent="تم إنشاء حساب الموظف بنجاح ✅";
+
+ ["empName","empEmail","empPhone","empPassword"].forEach(id=>{
+   document.getElementById(id).value="";
+ });
+};
 checkAdmin();
 </script>
 </body>
